@@ -2,15 +2,11 @@ import itertools
 import random
 
 from kivy.animation import Animation
-from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.image import Image as CoreImage
 from kivy.graphics import Rectangle
 from kivy.logger import Logger
-from kivy.properties import BooleanProperty, ListProperty, ObjectProperty,\
-    StringProperty
-from kivy.uix.gridlayout import GridLayout
-from kivy.uix.image import Image
+from kivy.properties import BooleanProperty, ListProperty, ObjectProperty
 from kivy.uix.widget import Widget
 from kivy.vector import Vector
 from kivy.core.window import Window
