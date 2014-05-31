@@ -214,7 +214,7 @@ class TileMap(Widget):
         """
         # calculate where a tile must be based on current size etc.
         pos = self.to_local(*pos)
-        found = False
+        found_x = False
         tile_x = 0
         while tile_x < self.tiled_map.width:
             if tile_x * self.scaled_tile_size[0] < pos[0]:
