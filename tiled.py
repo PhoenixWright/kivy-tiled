@@ -174,8 +174,8 @@ class TileMap(Widget):
     def on_size(self, *args):
         Logger.debug('TileMap: Re-drawing')
 
-        screen_tile_size = self.get_root_window().width / 10
-        self.scaled_tile_size = (screen_tile_size,self.get_root_window().width / 10)
+        screen_tile_size = self.get_root_window().width / 8
+        self.scaled_tile_size = (screen_tile_size, screen_tile_size)
 
         self.canvas.clear()
         with self.canvas:
