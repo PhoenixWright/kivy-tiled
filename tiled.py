@@ -200,10 +200,9 @@ class TileMap(Widget):
         return (pos_x, pos_y)
 
     def get_tile_position(self, x, y):
-        """Get the tile position relative to the screen."""
-        # calculate the position based on current scale
-        #child = self.children[child_index]
-        return self.to_window(*self._get_tile_pos(x, y))
+        """Get the tile position according to the window."""
+        pos = self.to_window(*self._get_tile_pos(x, y))
+        return pos
 
     def get_tile_at_position(self, pos):
         """Find out the tile coordinates of the position.
@@ -212,21 +211,27 @@ class TileMap(Widget):
         :return: The tile position.
         :rtype: (int, int) | None
         """
-        # calculate where a tile must be based on current size etc.
+        # convert the pos to local coords
         pos = self.to_local(*pos)
+        Logger.debug('TileMap: Finding tile at position {}'.format(pos))
+
         found_x = False
         tile_x = 0
         while tile_x < self.tiled_map.width:
-            if tile_x * self.scaled_tile_size[0] < pos[0]:
+            tile_x_right = (tile_x + 1) * self.scaled_tile_size[0]
+            if tile_x_right < pos[0]:
                 tile_x += 1
             else:
                 found_x = True
                 break
 
-        tile_y = 0
-        while tile_y < self.tiled_map.height:
-            if tile_y * self.scaled_tile_size[1] < pos[1]:
-                tile_y += 1
+        # start at the bottom of the map, same as kivy coords
+        tile_y = self.tiled_map.height
+        while tile_y != 0:
+            # calculate how far up from the bottom of the widget the tile is
+            tile_y_top = (self.tiled_map.height - tile_y) * self.scaled_tile_size[1]
+            if tile_y_top < pos[1]:
+                tile_y -= 1
             else:
                 if found_x:
                     return (tile_x, tile_y)
