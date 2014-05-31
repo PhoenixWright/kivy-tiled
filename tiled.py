@@ -201,8 +201,7 @@ class TileMap(Widget):
 
     def get_tile_position(self, x, y):
         """Get the tile position according to the window."""
-        pos = self.to_window(*self._get_tile_pos(x, y))
-        return pos
+        return self._get_tile_pos(x, y)
 
     def get_tile_at_position(self, pos):
         """Find out the tile coordinates of the position.
