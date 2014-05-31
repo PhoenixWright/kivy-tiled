@@ -230,6 +230,7 @@ class TileMap(Widget):
             else:
                 if found_x:
                     return (tile_x, tile_y)
+                break
 
         return None
 
@@ -354,8 +355,10 @@ class TileMovement(Widget):
         else:
             self.path.pop(0)
 
-    def move_to_tile(self, tile):
+    def move_to_tile(self, tile, retry=False):
         """Move to the specified tile, if possible.
+        :param retry: Whether or not to keep attempting the move every second.
+        :type retry: bool
         :return: Whether or not the move is possible.
         :rtype: bool
         """
@@ -373,11 +376,11 @@ class TileMovement(Widget):
         self.path = find_path(self.map_component.tiled_map, self.current_tile.x, self.current_tile.y, tile[0], tile[1])
 
         if not self.path:
-            Logger.debug('TileMovement: Move failed, no path, trying again in a sec')
-            Clock.unschedule(move_to_tile)
-            Clock.schedule_once(move_to_tile, 1)
+            Logger.debug('TileMovement: Move failed, no path')
+            if retry:
+                Logger.debug('TileMovement: Trying to move again in a second')
+                Clock.schedule_once(move_to_tile, 1)
             return False
-        Clock.unschedule(move_to_tile)
 
         # pop the first tile in the path, which is the current one
         if not self.moving:
