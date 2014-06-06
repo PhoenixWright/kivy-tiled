@@ -30,30 +30,37 @@ class KivyTiledMap(TiledMap):
 
     def loadTileImages(self, ts):
         """Loads the images in filename into Kivy Images.
+        This is a port of the code here: https://github.com/bitcraft/PyTMX/blob/master/pytmx/tmxloader.py
         :type ts: TiledTileset
         """
         texture = CoreImage('assets/' + ts.source).texture
 
         ts.width, ts.height = texture.size
+        tilewidth = ts.tilewidth + ts.spacing
+        tileheight = ts.tileheight + ts.spacing
+
+        # some tileset images may be slightly larger than the tile area
+        # ie: may include a banner, copyright, ect.  this compensates for that
+        width = int((((ts.width - ts.margin * 2 + ts.spacing) / tilewidth) * tilewidth) - ts.spacing)
+        height = int((((ts.height - ts.margin * 2 + ts.spacing) / tileheight) * tileheight) - ts.spacing)
 
         # initialize the image array
         self.images = [0] * self.maxgid
 
         p = itertools.product(
-            xrange(ts.margin, ts.height, ts.tileheight + ts.margin),
-            xrange(ts.margin, ts.width, ts.tilewidth + ts.margin)
+            xrange(ts.margin, height + ts.margin, tileheight),
+            xrange(ts.margin, width + ts.margin, tilewidth)
         )
 
         for real_gid, (y, x) in enumerate(p, ts.firstgid):
-            if x + ts.tilewidth - ts.spacing > ts.width:
+            if x + ts.tilewidth - ts.spacing > width:
                 continue
 
             gids = self.map_gid(real_gid)
 
             if gids:
-                x = x - ts.spacing
-                # convert the y coordinate to opengl (0 at bottom of texture)
-                y = ts.height - y - ts.tileheight + ts.spacing
+                # invert y for OpenGL coordinates
+                y = ts.height - y - ts.tileheight
 
                 tile = texture.get_region(x, y, ts.tilewidth, ts.tileheight)
 
