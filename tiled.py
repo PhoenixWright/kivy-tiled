@@ -52,6 +52,10 @@ class KivyTiledMap(TiledMap):
             xrange(ts.margin, width + ts.margin, tilewidth)
         )
 
+        # trim off any pixels on the right side that isn't a tile
+        # this happens if extra graphics are included on the left, but they are not actually part of the tileset
+        width -= (ts.width - ts.margin) % tilewidth
+
         for real_gid, (y, x) in enumerate(p, ts.firstgid):
             if x + ts.tilewidth - ts.spacing > width:
                 continue
