@@ -158,19 +158,14 @@ class TileMap(Widget):
 
     def __init__(self, **kwargs):
         self.tiled_map = KivyTiledMap('assets/section8map.tmx')
+        super(TileMap, self).__init__(**kwargs)
 
-        super(TileMap, self).__init__(
-            rows=self.tiled_map.height, cols=self.tiled_map.width,
-            row_force_default=True,
-            row_default_height=self.tiled_map.tileheight,
-            col_force_default=True,
-            col_default_width=self.tiled_map.tilewidth,
-            **kwargs
-        )
         self._scale = 1.0
         self.tile_map_size = (self.tiled_map.width, self.tiled_map.height)
         self.tile_size = (self.tiled_map.tilewidth, self.tiled_map.tileheight)
         self.scaled_tile_size = self.tile_size
+        self.scaled_map_width = self.scaled_tile_size[0] * self.tile_map_size[0]
+        self.scaled_map_height = self.scaled_tile_size[1] * self.tile_map_size[1]
 
     @property
     def scale(self):
@@ -180,6 +175,8 @@ class TileMap(Widget):
     def scale(self, value):
         self._scale = value
         self.scaled_tile_size = (self.tile_size[0] * self.scale, self.tile_size[1] * self.scale)
+        self.scaled_map_width = self.scaled_tile_size[0] * self.tile_map_size[0]
+        self.scaled_map_height = self.scaled_tile_size[1] * self.tile_map_size[1]
         self.on_size()
 
     def on_size(self, *args):
@@ -187,6 +184,8 @@ class TileMap(Widget):
 
         screen_tile_size = self.get_root_window().width / 8
         self.scaled_tile_size = (screen_tile_size, screen_tile_size)
+        self.scaled_map_width = self.scaled_tile_size[0] * self.tile_map_size[0]
+        self.scaled_map_height = self.scaled_tile_size[1] * self.tile_map_size[1]
 
         self.canvas.clear()
         with self.canvas:
