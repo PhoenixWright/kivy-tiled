@@ -4,14 +4,14 @@ import random
 from kivy.animation import Animation
 from kivy.clock import Clock
 from kivy.core.image import Image as CoreImage
-from kivy.graphics import Rectangle
+from kivy.graphics import Color, Rectangle
 from kivy.logger import Logger
 from kivy.properties import BooleanProperty, ListProperty, ObjectProperty
 from kivy.uix.widget import Widget
 from kivy.vector import Vector
 from kivy.core.window import Window
 
-from pytmx import TiledMap, TiledTileset
+from pytmx import TiledMap, TiledTileset, TiledLayer
 
 from kivyutil import find_component, get_component
 
@@ -189,19 +189,29 @@ class TileMap(Widget):
 
         self.canvas.clear()
         with self.canvas:
-            for tile in self.tiled_map.getTileLayerByName('Ground'):
-                tile_x = tile[0]
-                tile_y = tile[1]
-                texture = self.tiled_map.getTileImage(tile_x, tile_y, 0)
-                if texture == 0:
-                    continue  # keep going if the texture is empty
+            layer_idx = 0
+            for layer in self.tiled_map.all_layers:
+                if not layer.visible:
+                    continue  # skip the layer if it's not visible
 
-                # calculate the drawing parameters of the tile
-                draw_pos = self._get_tile_pos(tile_x, tile_y)
-                draw_size = self.scaled_tile_size
+                # set up the opacity of the tiled layer
+                Color(1.0, 1.0, 1.0, layer.opacity)
 
-                # create a rectangle instruction for the gpu
-                Rectangle(texture=texture, pos=draw_pos, size=draw_size)
+                # iterate through the tiles in the layer
+                for tile in layer:
+                    tile_x = tile[0]
+                    tile_y = tile[1]
+                    texture = self.tiled_map.getTileImage(tile_x, tile_y, layer_idx)
+                    if texture == 0:
+                        continue  # keep going if the texture is empty
+
+                    # calculate the drawing parameters of the tile
+                    draw_pos = self._get_tile_pos(tile_x, tile_y)
+                    draw_size = self.scaled_tile_size
+
+                    # create a rectangle instruction for the gpu
+                    Rectangle(texture=texture, pos=draw_pos, size=draw_size)
+                layer_idx += 1
 
     def _get_tile_pos(self, x, y):
         """Get the tile position relative to the widget."""
