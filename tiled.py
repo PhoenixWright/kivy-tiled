@@ -11,7 +11,7 @@ from kivy.uix.widget import Widget
 from kivy.vector import Vector
 from kivy.core.window import Window
 
-from pytmx import TiledMap, TiledTileset, TiledLayer
+from pytmx import TiledMap, TiledTileset, TiledTileLayer
 
 from kivyutil import find_component, get_component
 
@@ -72,10 +72,10 @@ class KivyTiledMap(TiledMap):
                     self.images[gid] = tile
 
     def find_tile_with_property(self, property_name, layer_name='Meta'):
-        layer = self.getTileLayerByName(layer_name)
-        index = self.tilelayers.index(layer)
+        layer = self.get_layer_by_name(layer_name)
+        index = self.layers.index(layer)
         for tile in layer:
-            properties = self.getTileProperties((tile[0], tile[1], index))
+            properties = self.get_tile_properties(tile[0], tile[1], index)
             if properties and property_name in properties:
                 return tile[0], tile[1]
 
@@ -83,10 +83,10 @@ class KivyTiledMap(TiledMap):
 
     def find_tiles_with_property(self, property_name, layer_name='Meta'):
         tiles = []
-        layer = self.getTileLayerByName(layer_name)
-        index = self.tilelayers.index(layer)
+        layer = self.get_layer_by_name(layer_name)
+        index = self.layers.index(layer)
         for tile in layer:
-            properties = self.getTileProperties((tile[0], tile[1], index))
+            properties = self.get_tile_properties(tile[0], tile[1], index)
             if properties and property_name in properties:
                 tiles.append((tile[0], tile[1]))
 
@@ -97,14 +97,13 @@ class KivyTiledMap(TiledMap):
         :return: Boolean representing whether or not there was a collision.
         :rtype: bool
         """
-        layer = self.getTileLayerByName(layer_name)
-        index = self.tilelayers.index(layer)
+        layer = self.get_layer_by_name(layer_name)
+        layer_index = self.layers.index(layer)
 
-        try:
-            properties = self.getTileProperties((x, y, index))
-            return property_name in properties
-        except:
-            return False
+        properties = self.get_tile_properties(x, y, layer_index)
+
+        # if there are properties to look at, check whether the name is in them
+        return property_name in properties if properties else False
 
     def valid_move(self, x, y, debug=False):
         # check if the tile is out of bounds
@@ -190,7 +189,7 @@ class TileMap(Widget):
         self.canvas.clear()
         with self.canvas:
             layer_idx = 0
-            for layer in self.tiled_map.all_layers:
+            for layer in self.tiled_map.layers:
                 if not layer.visible:
                     continue  # skip the layer if it's not visible
 
@@ -201,8 +200,9 @@ class TileMap(Widget):
                 for tile in layer:
                     tile_x = tile[0]
                     tile_y = tile[1]
-                    texture = self.tiled_map.getTileImage(tile_x, tile_y, layer_idx)
-                    if texture == 0:
+                    try:
+                        texture = self.tiled_map.get_tile_image(tile_x, tile_y, layer_idx)
+                    except AttributeError:
                         continue  # keep going if the texture is empty
 
                     # calculate the drawing parameters of the tile
