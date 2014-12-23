@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="7" height="10" tilewidth="70" tileheight="70">
+ <tileset firstgid="1" name="tiles" tilewidth="70" tileheight="70" spacing="4">
+  <image source="platformer.png" width="1024" height="1024"/>
+  <tile id="8">
+   <properties>
+    <property name="Collidable" value="True"/>
+    <property name="CropTile" value="True"/>
+   </properties>
+  </tile>
+  <tile id="33">
+   <properties>
+    <property name="CustomerWaitingArea" value="True"/>
+   </properties>
+  </tile>
+  <tile id="85">
+   <properties>
+    <property name="CustomerSpawnPoint" value="True"/>
+   </properties>
+  </tile>
+  <tile id="111">
+   <properties>
+    <property name="SpawnPoint" value="True"/>
+   </properties>
+  </tile>
+  <tile id="123">
+   <properties>
+    <property name="Collidable" value="True"/>
+   </properties>
+  </tile>
+ </tileset>
+ <layer name="Ground" width="7" height="10">
+  <data>
+   <tile gid="15"/>
+   <tile gid="15"/>
+   <tile gid="15"/>
+   <tile gid="15"/>
+   <tile gid="15"/>
+   <tile gid="15"/>
+   <tile gid="15"/>
+   <tile gid="15"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="15"/>
+   <tile gid="15"/>
+   <tile gid="85"/>
+   <tile gid="15"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="15"/>
+   <tile gid="15"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="15"/>
+   <tile gid="15"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="15"/>
+   <tile gid="85"/>
+   <tile gid="15"/>
+   <tile gid="15"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="15"/>
+   <tile gid="15"/>
+   <tile gid="15"/>
+   <tile gid="15"/>
+   <tile gid="85"/>
+   <tile gid="15"/>
+   <tile gid="15"/>
+   <tile gid="15"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+   <tile gid="85"/>
+  </data>
+ </layer>
+ <layer name="Meta" width="7" height="10" visible="0" opacity="0.4">
+  <data>
+   <tile gid="124"/>
+   <tile gid="124"/>
+   <tile gid="124"/>
+   <tile gid="124"/>
+   <tile gid="124"/>
+   <tile gid="124"/>
+   <tile gid="124"/>
+   <tile gid="124"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="9"/>
+   <tile gid="124"/>
+   <tile gid="124"/>
+   <tile gid="0"/>
+   <tile gid="124"/>
+   <tile gid="112"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="124"/>
+   <tile gid="124"/>
+   <tile gid="34"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="34"/>
+   <tile gid="124"/>
+   <tile gid="124"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="124"/>
+   <tile gid="0"/>
+   <tile gid="124"/>
+   <tile gid="124"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="34"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="124"/>
+   <tile gid="124"/>
+   <tile gid="124"/>
+   <tile gid="124"/>
+   <tile gid="0"/>
+   <tile gid="124"/>
+   <tile gid="124"/>
+   <tile gid="124"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="86"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
+  </data>
+ </layer>
+</map>

@@ -1,3 +1,4 @@
+import os
 import itertools
 import random
 
@@ -6,34 +7,40 @@ from kivy.clock import Clock
 from kivy.core.image import Image as CoreImage
 from kivy.graphics import Color, Rectangle
 from kivy.logger import Logger
-from kivy.properties import BooleanProperty, ListProperty, ObjectProperty
+from kivy.properties import BooleanProperty, ListProperty
 from kivy.uix.widget import Widget
 from kivy.vector import Vector
-from kivy.core.window import Window
 
-from pytmx import TiledMap, TiledTileset, TiledTileLayer
-
-from kivyutil import find_component, get_component
+from pytmx import TiledMap, TiledTileset
 
 
 class KivyTiledMap(TiledMap):
-    """Loads Kivy images. Make sure that there is an active OpenGL context
+    """
+    Loads Kivy images. Make sure that there is an active OpenGL context
     (Kivy Window) before trying to load a map.
     """
 
-    def __init__(self, *args, **kwargs):
-        super(KivyTiledMap, self).__init__(*args, **kwargs)
+    def __init__(self, map_file_path=None, *args, **kwargs):
+        assert map_file_path, 'No map file provided, please provide the path to a .tmx file.'
+        super(KivyTiledMap, self).__init__(map_file_path, *args, **kwargs)
+
+        # pull out the directory containing the map file path
+        self.map_dir = os.path.dirname(map_file_path)
 
         # call load tile images for each tileset
         for tileset in self.tilesets:
             self.loadTileImages(tileset)
 
     def loadTileImages(self, ts):
-        """Loads the images in filename into Kivy Images.
+        """
+        Loads the images in filename into Kivy Images.
         This is a port of the code here: https://github.com/bitcraft/PyTMX/blob/master/pytmx/tmxloader.py
+
         :type ts: TiledTileset
         """
-        texture = CoreImage('assets/' + ts.source).texture
+        tile_image_path = self.map_dir + '/' + ts.source
+        Logger.debug('KivyTiledMap: loading tile image at {}'.format(tile_image_path))
+        texture = CoreImage(tile_image_path).texture
 
         ts.width, ts.height = texture.size
         tilewidth = ts.tilewidth + ts.spacing
@@ -108,18 +115,14 @@ class KivyTiledMap(TiledMap):
     def valid_move(self, x, y, debug=False):
         # check if the tile is out of bounds
         if x < 0 or x > self.width - 1 or y < 0 or y > self.height - 1:
-            if debug: Logger.debug('KivyTiledMap: Move {},{} is out of bounds'.format(x, y))
+            if debug:
+                Logger.debug('KivyTiledMap: Move {},{} is out of bounds'.format(x, y))
             return False
 
         # check if the tile has the property 'Collidable'
         if self.tile_has_property(x, y, 'Collidable'):
-            if debug: Logger.debug('KivyTiledMap: Move {},{} collides with map object'.format(x, y))
-            return False
-
-        # check if there are any actors in the tile
-        if not hasattr(self, 'game'):
-            self.game = find_component(Window, obj_type_name='Game')
-        if self.game.actor_in_tile((x, y)):
+            if debug:
+                Logger.debug('KivyTiledMap: Move {},{} collides with map object'.format(x, y))
             return False
 
         return True
@@ -155,8 +158,9 @@ class TileMap(Widget):
     """Creates a Kivy grid and puts the tiles in a KivyTiledMap in it."""
     scaled_tile_size = ListProperty()
 
-    def __init__(self, **kwargs):
-        self.tiled_map = KivyTiledMap('assets/section8map.tmx')
+    def __init__(self, map_file_path=None, **kwargs):
+        assert map_file_path, 'No map file path provided to TileMap. Please pass in a path to a .tmx file.q'
+        self.tiled_map = KivyTiledMap(map_file_path)
         super(TileMap, self).__init__(**kwargs)
 
         self._scale = 1.0
@@ -269,11 +273,11 @@ class TileMovement(Widget):
     moving = BooleanProperty(False)
     path = ListProperty()  # list of nodes to the destination tile
 
-    game = ObjectProperty()
-    map_component = ObjectProperty()
-
-    def __init__(self, **kwargs):
+    def __init__(self, tile_map, **kwargs):
         super(TileMovement, self).__init__(**kwargs)
+
+        # hold on to the tile map
+        self.tile_map = tile_map
 
         # TODO: figure out why this as a class variable shares across instances
         self.current_tile = Vector(0, 0)
@@ -285,18 +289,6 @@ class TileMovement(Widget):
 
         # dispatched when movements are complete
         self.register_event_type('on_complete')
-
-        # gather components
-        Clock.schedule_once(lambda dt: self.get_components())
-
-    def get_components(self):
-        if self.initialized:
-            return
-
-        self.game = find_component(Window, obj_type_name='Game')
-        self.map_component = find_component(Window, TileMap)
-        if self.map_component:
-            self.initialized = True
 
     def on_complete(self):
         pass
@@ -321,35 +313,26 @@ class TileMovement(Widget):
         """
         self.direction = direction
         new_x, new_y = self.get_tile_in_direction(self.direction)
-        valid_move = self.map_component.tiled_map.valid_move(new_x, new_y)
-        actor_ahead = self.get_actor_ahead()
 
-        if actor_ahead:
-            Logger.debug('TileMovement: Invalid move - actor ahead')
+        # move the destination tile to keep coherence
+        if self.destination_tile == self.current_tile:
+            self.destination_tile.x = new_x
+            self.destination_tile.y = new_y
 
-        valid_move = valid_move and not actor_ahead
-        if valid_move:
-            # move the destination tile to keep coherence
-            if self.destination_tile == self.current_tile:
-                self.destination_tile.x = new_x
-                self.destination_tile.y = new_y
+        self.current_tile.x = new_x
+        self.current_tile.y = new_y
 
-            self.current_tile.x = new_x
-            self.current_tile.y = new_y
+        coordinates = self.tile_map.get_tile_position(
+            self.current_tile.x, self.current_tile.y)
+        Logger.debug('Character: Moving to {} at {}'.format(
+            self.current_tile, coordinates))
 
-            coordinates = self.map_component.get_tile_position(
-                self.current_tile.x, self.current_tile.y)
-            Logger.debug('Character: Moving to {} at {}'.format(
-                self.current_tile, coordinates))
+        # mark moving variable in case anyone is watching it
+        self.moving = True
 
-            # mark moving variable in case anyone is watching it
-            self.moving = True
-
-            anim = Animation(x=coordinates[0], y=coordinates[1], duration=0.5)
-            anim.bind(on_complete=lambda *args: self.on_animation_complete())
-            anim.start(self.parent)
-
-        return valid_move
+        anim = Animation(x=coordinates[0], y=coordinates[1], duration=0.5)
+        anim.bind(on_complete=lambda *args: self.on_animation_complete())
+        anim.start(self.parent)
 
     def _move_to_tile(self):
         if not self.path:
@@ -437,21 +420,6 @@ class TileMovement(Widget):
         """
         return self.get_tile_in_direction(self.direction)
 
-    def get_actor_ahead(self):
-        """Check if the character this TileMovement component is attached to is
-        facing an actor.
-        :return: Character this character is facing, or None.
-        :rtype: Character
-        """
-        x, y = self.get_tile_in_direction(self.direction)
-        for actor in self.game.actors:
-            actor_movement = get_component(actor, TileMovement)
-            if actor_movement.current_tile.x == x \
-                    and actor_movement.current_tile.y == y:
-                return actor
-
-        return None
-
     def set_current_tile(self, x, y):
         self.current_tile.x = x
         self.current_tile.y = y
@@ -461,7 +429,7 @@ class TileMovement(Widget):
         if not self.initialized:
             self.get_components()
 
-        new_pos = self.map_component.get_tile_position(
+        new_pos = self.tile_map.get_tile_position(
             self.current_tile.x, self.current_tile.y)
         Logger.debug('TileMovement: Setting current tile to {}'.format(new_pos))
         self.parent.pos = new_pos
@@ -546,3 +514,18 @@ def find_path(tiled_map, start_x, start_y, dest_x, dest_y):
 
     # if we got here no path was found
     return []
+
+
+if __name__ == '__main__':
+    from kivy.app import App
+    from kivy.uix.boxlayout import BoxLayout
+
+    class TiledApp(App):
+
+        def build(self):
+            main_widget = BoxLayout()
+            map_file_path = 'test/assets/testmap.tmx'
+            Clock.schedule_once(lambda *args: main_widget.add_widget(TileMap(map_file_path)))
+            return main_widget
+
+    TiledApp().run()
