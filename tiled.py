@@ -518,12 +518,12 @@ def find_path(tiled_map, start_x, start_y, dest_x, dest_y):
 
 if __name__ == '__main__':
     from kivy.app import App
-    from kivy.uix.boxlayout import BoxLayout
+    from kivy.uix.scatterlayout import ScatterLayout
 
     class TiledApp(App):
 
         def build(self):
-            main_widget = BoxLayout()
+            main_widget = ScatterLayout()
             map_file_path = 'test/assets/testmap.tmx'
             Clock.schedule_once(lambda *args: main_widget.add_widget(TileMap(map_file_path)))
             return main_widget
