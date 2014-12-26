@@ -221,7 +221,7 @@ class TileMap(Widget):
         """Get the tile position relative to the widget."""
         pos_x = x * self.scaled_tile_size[0]
         pos_y = (self.tile_map_size[1] - y - 1) * self.scaled_tile_size[1]
-        return (pos_x, pos_y)
+        return pos_x, pos_y
 
     def get_tile_position(self, x, y):
         """Get the tile position according to the window."""
@@ -257,7 +257,7 @@ class TileMap(Widget):
                 tile_y -= 1
             else:
                 if found_x:
-                    return (tile_x, tile_y)
+                    return tile_x, tile_y
                 break
 
         return None
@@ -290,6 +290,9 @@ class TileMovement(Widget):
         # dispatched when movements are complete
         self.register_event_type('on_complete')
 
+        # debugging via rectangle drawing
+        self._debug = False
+
     def on_complete(self):
         pass
 
@@ -306,11 +309,14 @@ class TileMovement(Widget):
             self.dispatch('on_complete')
 
     def move(self, direction):
-        """Move up, down, left or right.
+        """
+        Move up, down, left or right.
+
         :param direction: The direction to move in.
         :type direction: str
         :rtype: bool
         """
+        Logger.debug('TileMovement: move({})'.format(direction))
         self.direction = direction
         new_x, new_y = self.get_tile_in_direction(self.direction)
 
@@ -322,17 +328,15 @@ class TileMovement(Widget):
         self.current_tile.x = new_x
         self.current_tile.y = new_y
 
-        coordinates = self.tile_map.get_tile_position(
-            self.current_tile.x, self.current_tile.y)
-        Logger.debug('Character: Moving to {} at {}'.format(
-            self.current_tile, coordinates))
+        coordinates = self.tile_map.get_tile_position(self.current_tile.x, self.current_tile.y)
+        Logger.debug('TileMovement: Moving to {} at {}'.format(self.current_tile, coordinates))
 
         # mark moving variable in case anyone is watching it
         self.moving = True
 
-        anim = Animation(x=coordinates[0], y=coordinates[1], duration=0.5)
-        anim.bind(on_complete=lambda *args: self.on_animation_complete())
-        anim.start(self.parent)
+        animation = Animation(pos=coordinates, duration=0.5)
+        animation.bind(on_complete=lambda *args: self.on_animation_complete())
+        animation.start(self)
 
     def _move_to_tile(self):
         if not self.path:
@@ -380,7 +384,7 @@ class TileMovement(Widget):
             self.move_to_tile(self.destination_tile)
 
         # find a path
-        self.path = find_path(self.map_component.tiled_map, self.current_tile.x, self.current_tile.y, tile[0], tile[1])
+        self.path = find_path(self.tile_map, self.current_tile.x, self.current_tile.y, tile[0], tile[1])
 
         if not self.path:
             Logger.debug('TileMovement: Move failed, no path')
@@ -402,16 +406,16 @@ class TileMovement(Widget):
         tile_x = self.current_tile.x
         tile_y = self.current_tile.y
 
-        if direction == 'up':
+        if direction == self.UP:
             tile_y -= 1
-        elif direction == 'down':
+        elif direction == self.DOWN:
             tile_y += 1
-        elif direction == 'left':
+        elif direction == self.LEFT:
             tile_x -= 1
-        elif direction == 'right':
+        elif direction == self.RIGHT:
             tile_x += 1
 
-        return (tile_x, tile_y)
+        return tile_x, tile_y
 
     def get_tile_in_current_direction(self):
         """Get the tile in the direction this component is facing.
@@ -426,13 +430,22 @@ class TileMovement(Widget):
         self.destination_tile.x = self.current_tile.x
         self.destination_tile.y = self.current_tile.y
 
-        if not self.initialized:
-            self.get_components()
-
-        new_pos = self.tile_map.get_tile_position(
-            self.current_tile.x, self.current_tile.y)
+        new_pos = self.tile_map.get_tile_position(self.current_tile.x, self.current_tile.y)
         Logger.debug('TileMovement: Setting current tile to {}'.format(new_pos))
-        self.parent.pos = new_pos
+        self.pos = new_pos
+
+    def debug(self):
+        self._debug = True
+
+    def on_pos(self, *args):
+        with self.canvas:
+            Color(1, 1, 1)
+            Rectangle(pos=self.pos, size=self.size)
+
+    def on_size(self, *args):
+        with self.canvas:
+            Color(1, 1, 1)
+            Rectangle(pos=self.pos, size=self.size)
 
 
 class TiledNode(object):
@@ -465,8 +478,8 @@ class TiledNode(object):
 
 def build_path(node):
     """
-    :param end_node: The node at the end of a path.
-    :type end_node: TiledNode
+    :param node: The node at the end of a path.
+    :type node: TiledNode
     :return: A list of coordinate tuples.
     :rtype: list
     """
@@ -518,6 +531,7 @@ def find_path(tiled_map, start_x, start_y, dest_x, dest_y):
 
 if __name__ == '__main__':
     from kivy.app import App
+    from kivy.config import Config
     from kivy.uix.scatterlayout import ScatterLayout
 
     class TiledApp(App):
@@ -525,7 +539,25 @@ if __name__ == '__main__':
         def build(self):
             main_widget = ScatterLayout()
             map_file_path = 'test/assets/testmap.tmx'
-            Clock.schedule_once(lambda *args: main_widget.add_widget(TileMap(map_file_path)))
+
+            def add_widgets():
+                tile_map = TileMap(map_file_path)
+                main_widget.add_widget(tile_map)
+
+                tile_movement = TileMovement(tile_map)
+                tile_movement.debug()
+                tile_movement.size_hint = 0.1, 0.1
+                #main_widget.add_widget(tile_movement)
+
+                def move_demo():
+                    direction = tile_movement.RIGHT
+                    Logger.debug('move_demo: moving {}'.format(direction))
+                    tile_movement.move(direction)
+
+                #Clock.schedule_interval(lambda *args: move_demo(), 2)
+
+            Clock.schedule_once(lambda *args: add_widgets())
             return main_widget
 
+    Config.set('kivy', 'log_level', 'debug')
     TiledApp().run()
