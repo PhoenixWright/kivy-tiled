@@ -11,10 +11,10 @@ from kivy.properties import BooleanProperty, ListProperty
 from kivy.uix.widget import Widget
 from kivy.vector import Vector
 
-from pytmx import TiledMap, TiledTileset
+import pytmx
 
 
-class KivyTiledMap(TiledMap):
+class KivyTiledMap(pytmx.TiledMap):
     """
     Loads Kivy images. Make sure that there is an active OpenGL context
     (Kivy Window) before trying to load a map.
@@ -26,6 +26,7 @@ class KivyTiledMap(TiledMap):
 
         # pull out the directory containing the map file path
         self.map_dir = os.path.dirname(map_file_path)
+        Logger.debug('KivyTiledMap: directory containing map file: "{}"'.format(self.map_dir))
 
         # call load tile images for each tileset
         for tileset in self.tilesets:
@@ -36,7 +37,7 @@ class KivyTiledMap(TiledMap):
         Loads the images in filename into Kivy Images.
         This is a port of the code here: https://github.com/bitcraft/PyTMX/blob/master/pytmx/tmxloader.py
 
-        :type ts: TiledTileset
+        :type ts: pytmx.TiledTileset
         """
         tile_image_path = self.map_dir + '/' + ts.source
         Logger.debug('KivyTiledMap: loading tile image at {}'.format(tile_image_path))
@@ -45,13 +46,16 @@ class KivyTiledMap(TiledMap):
         ts.width, ts.height = texture.size
         tilewidth = ts.tilewidth + ts.spacing
         tileheight = ts.tileheight + ts.spacing
+        Logger.debug('KivyTiledMap: TiledTileSet: {}x{} with {}x{} tiles'.format(ts.width, ts.height, tilewidth, tileheight))
 
         # some tileset images may be slightly larger than the tile area
         # ie: may include a banner, copyright, ect.  this compensates for that
         width = int((((ts.width - ts.margin * 2 + ts.spacing) / tilewidth) * tilewidth) - ts.spacing)
         height = int((((ts.height - ts.margin * 2 + ts.spacing) / tileheight) * tileheight) - ts.spacing)
+        Logger.debug('KivyTiledMap: TiledTileSet: true size: {}x{}'.format(width, height))
 
         # initialize the image array
+        Logger.debug('KivyTiledMap: initializing image array')
         self.images = [0] * self.maxgid
 
         p = itertools.product(
@@ -541,9 +545,13 @@ if __name__ == '__main__':
             map_file_path = 'test/assets/testmap.tmx'
 
             def add_widgets():
+                Logger.debug('TiledApp: creating tile map using map file: {}'.format(map_file_path))
                 tile_map = TileMap(map_file_path)
+
+                Logger.debug('TiledApp: adding tile map to main widget')
                 main_widget.add_widget(tile_map)
 
+                Logger.debug('TiledApp: creating TileMovement widget')
                 tile_movement = TileMovement(tile_map)
                 tile_movement.debug()
                 tile_movement.size_hint = 0.1, 0.1
@@ -560,4 +568,8 @@ if __name__ == '__main__':
             return main_widget
 
     Config.set('kivy', 'log_level', 'debug')
+
+    # print out the version of pytmx
+    Logger.debug('TiledApp: pytmx version: {}'.format(pytmx.__version__))
+
     TiledApp().run()
